@@ -35,7 +35,7 @@ Follow these steps to set up and run the Library Management System on your local
    Open your terminal and execute:
 
    ```bash
-   git clone https://github.com/yourusername/library-management-system.git
+   git clone https://github.com/yordil/A2SV-Backend-Tasks
 
    ```
 
@@ -52,9 +52,11 @@ Follow these steps to set up and run the Library Management System on your local
    ./library-management-system
    ```
 
+   Upon starting the application, you'll be presented with the main menu, offering various options for managing books and members. The interface will look like this:
+
 ```
 
-Upon starting the application, you'll be presented with the main menu, offering various options for managing books and members. The interface will look like this:
+
 
 ==============================================
 Welcome to the Library Management System

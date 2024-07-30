@@ -12,7 +12,7 @@ func main() {
 	fmt.Println("        Welcome to the Library Management System")
 	fmt.Println("==============================================")
 	fmt.Println("Please select an option:")
-	fmt.Println()
+	
 
 	var choice int
 

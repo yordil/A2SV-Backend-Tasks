@@ -56,18 +56,16 @@ Follow these steps to set up and run the Library Management System on your local
 
 Upon starting the application, you'll be presented with the main menu, offering various options for managing books and members. The interface will look like this:
 
-```
-
 ==============================================
 Welcome to the Library Management System
 ==============================================
 Please select an option:
 
----
+----------------------------------------------
 
                   Menu Options
 
----
+----------------------------------------------
 
 1. Add Book
 2. Add Member
@@ -78,11 +76,10 @@ Please select an option:
 7. List Borrowed Books
 8. Exit
 
----
+----------------------------------------------
 
 Enter your choice (1-8):
 
-```
 
 
 ```

@@ -1,6 +1,6 @@
 # Library Management System
 
-![Library Management System](#) <!-- Insert a cover image or logo here -->
+![Library Management System](#) 
 
 ## Overview
 

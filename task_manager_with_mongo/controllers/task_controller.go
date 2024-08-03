@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"taskmanager/models"
 	"taskmanager/services"
-
 	"github.com/gin-gonic/gin"
 )	
 
@@ -25,17 +24,20 @@ func CreateTask(c *gin.Context) {
 	var task models.Task
 
 	if err := c.ShouldBindJSON(&task); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error  *********": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := services.CreateTask(&task)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error #########": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, task)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Task created successfully",
+		"task": task,
+	})
 }
 
 func GetTasksByID(c *gin.Context) {

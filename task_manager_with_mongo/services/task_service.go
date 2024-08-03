@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	"taskmanager/config"
@@ -22,7 +23,10 @@ func init() {
     if err != nil { 
         log.Fatal(err)
     }
-    collection = client.Database("taskmanager").Collection("tasks")
+    var dbname = os.Getenv("DB_NAME")
+    var collectionname = os.Getenv("COLLECTION_NAME")
+
+    collection = client.Database(dbname).Collection(collectionname)
 }
 
 // GetTasks fetches all tasks from the database and returns them as a slice

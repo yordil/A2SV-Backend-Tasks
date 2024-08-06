@@ -3,9 +3,9 @@ package data
 import (
 	"auth/config"
 	"auth/models"
-	"auth/utils"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var user_collection *mongo.Collection
@@ -30,7 +31,7 @@ func init() {
 
 func Register(user *models.User) error  {
 
-	hashedPassword , err := utils.PasswordHash(user.Password)
+	hashedPassword , err :=  bcrypt.GenerateFromPassword([]byte(user.Password) , bcrypt.DefaultCost)
 
 	if err != nil {
 		return err
@@ -65,7 +66,7 @@ func Login(user *models.User) (*models.User) {
 	defer cancel()
 	err := user_collection.FindOne(ctx, bson.M{"email": email}).Decode(&existing)
 
-	if err != nil {
+	if err != nil  || bcrypt.CompareHashAndPassword([]byte(existing.Password) , []byte(user.Password)) != nil {
 		return nil
 	}
 
@@ -158,4 +159,29 @@ func GetUserByEmail(email string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+
+func UserIdGetter(id string , taskid string) bool {
+
+    // get userid from the task collection
+    var task models.Task
+    objID, err := primitive.ObjectIDFromHex(taskid)
+    if err != nil {
+        return false
+    }
+    // context
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    err = collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&task)
+    if err != nil {
+        return false
+    }
+    
+    fmt.Println(task , task.USERID , id , "*********************")
+
+    fmt.Println(task.USERID == id)
+    
+    return task.USERID == id 
+
 }

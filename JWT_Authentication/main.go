@@ -10,7 +10,8 @@ import (
 
 
 func main() {
-  
+  // loading envs
+  // err := godotenv.Load()
   router := gin.Default()
   routes.RegisterRoutes(router)
   router.Run()

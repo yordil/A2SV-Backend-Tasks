@@ -117,6 +117,8 @@ func DeleteTask(id string) (string , error) {
 func UpdateTask(id string , task *models.Task) (*models.Task, error) {
     
     objID , err := primitive.ObjectIDFromHex(id)
+
+    
     if err != nil { 
         return nil, err
     }
@@ -152,7 +154,7 @@ func GetTasksByUserID(id string) ([]*models.Task, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    cursor, err := collection.Find(ctx, bson.M{"user_id": id})  
+    cursor, err := collection.Find(ctx, bson.M{"userid": id})  
 
     if err != nil {
         return nil, err

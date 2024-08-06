@@ -3,6 +3,7 @@ package controller
 import (
 	"auth/data"
 	"auth/models"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -46,12 +47,15 @@ func GetTasksByID(c *gin.Context) {
 	id := c.Param("id")
 
 	personID := c.GetString("user_id")
-
-	if id != personID { 
-		c.IndentedJSON(http.StatusForbidden , gin.H{"message" : "You are not authorized to view this task"})
-		return 
+	role := c.GetString("role")
+	if role != "thisisadmin" {
+		owner  := data.UserIdGetter(personID , id)
+		fmt.Println(owner , "******** This is owner ")
+		if !owner { 
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not authorized to view this task"})
+			return
+		}
 	}
-
 	task , err := data.GetTaskByID(id)
 
 	if task == nil {
@@ -71,6 +75,7 @@ func GetTasksByID(c *gin.Context) {
 func GetTasksByUserID(c *gin.Context) {
 		
 		id  := c.GetString("user_id")
+		// fmt.Println(id , fmt.Sprintf("%T", id) , "********")
 		tasks, err := data.GetTasksByUserID(id)
 
 		if err != nil { 
@@ -87,8 +92,20 @@ func UpdateTask(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	id := c.Param("id")
-	updatedTask , err := data.UpdateTask(id , &task)
+	taskid := c.Param("id")
+	userid := c.GetString("user_id")
+
+	// role := c.GetString("role")	
+	
+	flag := data.UserIdGetter(userid , taskid)
+	fmt.Println(flag , "************************************")
+
+	if !flag {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not authorized to update this task"})
+		return
+	}
+
+	updatedTask , err := data.UpdateTask(taskid , &task)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -97,9 +114,17 @@ func UpdateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"task": updatedTask})
 }
 
-
 func DeleteTask(c *gin.Context) {
 	id := c.Param("id")
+
+	userid := c.GetString("user_id")
+
+	flag := data.UserIdGetter(userid , id)
+
+	if !flag {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not authorized to delete this task"})
+		return
+	}
 
 	res , err := data.DeleteTask(id)
 	if err != nil {
@@ -109,3 +134,4 @@ func DeleteTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": res})
 }
+

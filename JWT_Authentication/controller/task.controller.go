@@ -15,7 +15,6 @@ func GetTasks(c *gin.Context) {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to fetch tasks"})
         return
     }
-
     c.JSON(http.StatusOK, tasks)
 }
 
@@ -23,12 +22,14 @@ func GetTasks(c *gin.Context) {
 func CreateTask(c *gin.Context) {
 
 	var task models.Task
+	id := c.GetString("user_id")
+	
+	task.USERID = id
 
 	if err := c.ShouldBindJSON(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	err := data.CreateTask(&task)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -44,6 +45,13 @@ func CreateTask(c *gin.Context) {
 func GetTasksByID(c *gin.Context) {
 	id := c.Param("id")
 
+	personID := c.GetString("user_id")
+
+	if id != personID { 
+		c.IndentedJSON(http.StatusForbidden , gin.H{"message" : "You are not authorized to view this task"})
+		return 
+	}
+
 	task , err := data.GetTaskByID(id)
 
 	if task == nil {
@@ -58,6 +66,19 @@ func GetTasksByID(c *gin.Context) {
 
 	
 	c.IndentedJSON(http.StatusOK, gin.H{"task" : task})
+}
+
+func GetTasksByUserID(c *gin.Context) {
+		
+		id  := c.GetString("user_id")
+		tasks, err := data.GetTasksByUserID(id)
+
+		if err != nil { 
+			c.JSON(http.StatusInternalServerError, gin.H{"error" : "Unable to fetch tasks"})
+			return 
+		}
+		c.JSON(http.StatusOK, gin.H{"tasks" : tasks})
+
 }
 
 func UpdateTask(c *gin.Context) {
@@ -88,5 +109,3 @@ func DeleteTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": res})
 }
-
-

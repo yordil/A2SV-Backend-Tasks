@@ -3,6 +3,7 @@ package data
 import (
 	"auth/config"
 	"auth/models"
+	"auth/utils"
 	"context"
 	"errors"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var user_collection *mongo.Collection
@@ -30,7 +30,7 @@ func init() {
 
 func Register(user *models.User) error  {
 
-	hashedPassword , err :=  bcrypt.GenerateFromPassword([]byte(user.Password) , bcrypt.DefaultCost)
+	hashedPassword , err := utils.PasswordHash(user.Password)
 
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func Login(user *models.User) (*models.User) {
 	defer cancel()
 	err := user_collection.FindOne(ctx, bson.M{"email": email}).Decode(&existing)
 
-	if err != nil  || bcrypt.CompareHashAndPassword([]byte(existing.Password) , []byte(user.Password)) != nil {
+	if err != nil {
 		return nil
 	}
 

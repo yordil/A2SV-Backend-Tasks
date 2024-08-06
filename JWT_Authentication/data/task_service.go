@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -143,5 +144,34 @@ func UpdateTask(id string , task *models.Task) (*models.Task, error) {
     }
 
     return &updatedTask, nil
+}
+
+func GetTasksByUserID(id string) ([]*models.Task, error) {
+    
+    var tasks []*models.Task
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    cursor, err := collection.Find(ctx, bson.M{"user_id": id})  
+
+    if err != nil {
+        return nil, err
+    }
+
+    for cursor.Next(ctx){
+        var task models.Task
+        fmt.Println(cursor)
+        if err := cursor.Decode(&task); err != nil {
+            return nil, err
+        }
+        tasks = append(tasks, &task)
+    }
+
+    if err := cursor.Err(); err != nil { 
+        return nil, err
+    }
+
+    return tasks, nil
+
 }
 

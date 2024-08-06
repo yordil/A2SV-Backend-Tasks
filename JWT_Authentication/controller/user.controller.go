@@ -3,14 +3,14 @@ package controller
 import (
 	"auth/data"
 	"auth/models"
+	"auth/utils"
 	"net/http"
-	"os"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+
 
 func Register(c *gin.Context) {
 	var user models.User
@@ -30,36 +30,37 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-
 	var user models.User
 	var existingUser *models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest , gin.H{"message" : err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
 	}
 
-	existingUser = data.Login(&user)	
-	if existingUser == nil {	 
-		c.IndentedJSON(http.StatusBadRequest , gin.H{"message" : "User not found",})
-		return 
+	existingUser = data.Login(&user)
+	if existingUser == nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "User not found"})
+		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-	"user_id": existingUser.ID,
-	"email":   existingUser.Email,
-	"role":   existingUser.Role,
-	})
-
-	jwtToken, err := token.SignedString(jwtSecret)
-
-	if err != nil { 
-		c.IndentedJSON(http.StatusInternalServerError , gin.H{"message" :	"cannot create a token",})
+	// Verify the password
+	err := utils.PasswordVerify([]byte(existingUser.Password), user.Password)
+	if err != nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"message": "Incorrect password"})
+		return
 	}
 
-	c.IndentedJSON(http.StatusOK , gin.H{"message" : "User logged in successfully ", "token": jwtToken})
+	// Generate JWT token
+	jwtToken, err := utils.TokenGenerator(existingUser)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "cannot create a token"})
+		return
+	}
 
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "User logged in successfully", "token": jwtToken})
 }
+
 
 
 func GetAllUser(c * gin.Context) {

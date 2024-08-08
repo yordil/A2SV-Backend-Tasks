@@ -34,7 +34,7 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 
 		user.GET("/getAllUser" , middleware.AdminMiddleware() ,  controller.GetAllUser)
-		user.DELETE("/deleteUser" ,middleware.AdminMiddleware() ,   controller.DeleteUser)
+		user.DELETE("/deleteUser/:id" ,middleware.AdminMiddleware() ,   controller.DeleteUser)
 	}
 }
 	// router.NoRoute(controller.NotFound)

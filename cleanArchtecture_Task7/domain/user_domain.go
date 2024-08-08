@@ -12,12 +12,14 @@ type User struct {
 type UserRepository interface {
 	CreateUser(user User) (User, error)
 	// GetUserByEmail(email string) (User, error)
-	// GetUserByID(id int) (User, error)
-	// DeleteUser(id int) error
+	GetAllUsers() ([]User, error)
+	DeleteUser(id string) 
 	// UpdateUser(user User) (User, error)
-	// Login(email string, password string) (User, error)
+	Login(email string, password string) (User, error)
+	
 }
 
-// type PasswordService interface {
-// 	HashPassword(password string) (string, error)
-// }
+type PasswordService interface {
+	HashPassword(password string) (string, error)
+	ComparePassword(hashedPassword, password string) error
+}

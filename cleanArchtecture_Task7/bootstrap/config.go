@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"log"
+	"os"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -12,12 +13,14 @@ var Client *mongo.Client
 
 func ConnectDB(){
 //    gin.SetMode(gin.ReleaseMode)
-  
+      // load env variable
+      
 //   if err != nil {
 //     log.Fatal("Error loading .env file")
 //   }
 
-  mongoURI := "mongodb+srv://yordi:123456taskmanager@cluster0.4iymqyp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  // mongoURI := "mongodb+srv://yordi:123456taskmanager@cluster0.4iymqyp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  mongoURI := os.Getenv("MONGO_URI")
   if mongoURI == "" {
     log.Fatal("MONGO_URI environment variable not set")
   }

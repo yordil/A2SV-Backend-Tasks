@@ -30,17 +30,7 @@ func SetupUserRoutes(router *gin.Engine) {
     //     userRoutes.GET("/" , userController.GetAllUsers)
 
     }
-    //     tasks := router.Group("/tasks")
-    //     tasks.Use(infrastructure.AuthMiddleware())
-    // {
-    //     tasks.GET("/" , middleware.AdminMiddleware() ,  controller.GetTasks) 
-	// 	tasks.GET("/:id", controller.GetTasksByID) 
-	// 	tasks.POST("/" ,  controller.CreateTask)  
-	// 	tasks.DELETE("/:id" , controller.DeleteTask)  
-	// 	tasks.PUT("/:id", controller.UpdateTask)  
-	// 	tasks.GET("/mytask" , controller.GetTasksByUserID)
-
-    // }
+  
 }
 
 

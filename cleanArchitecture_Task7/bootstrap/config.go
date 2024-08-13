@@ -43,6 +43,6 @@ func ConnectDB(){
   Client = client
 }
 
-func GetCollection(collectionName string) *mongo.Collection {
-	  return Client.Database("taskmanager").Collection(collectionName)
+func GetCollection(dbname , collectionName string) *mongo.Collection {
+    return Client.Database(dbname).Collection(collectionName)
 }

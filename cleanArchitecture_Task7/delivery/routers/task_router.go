@@ -3,30 +3,34 @@ package routers
 import (
 	"task7/bootstrap"
 	"task7/Delivery/controllers"
-	"task7/infrastructure"
 	"task7/repository"
 	"task7/usecase"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupTaskRoutes(router *gin.Engine) {
+func NewTaskRouter(env *bootstrap.Env, timeout time.Duration, db *mongo.Client, router *gin.RouterGroup) {
 
-    collection := bootstrap.GetCollection("taskss")
+
     
-    taskRepo := repository.NewTaskRepositoryImpl(collection)
+    taskRepo := repository.NewTaskRepositoryImpl(db ,  env.DBName, env.TaskCollection)
     taskUseCase := usecase.NewTaskUseCase(taskRepo)
     taskController := controllers.NewTaskController(taskUseCase)
 
-        tasks := router.Group("/tasks")
-        tasks.Use(infrastructure.AuthMiddleware())
-    {
-        tasks.GET("/" , infrastructure.AdminMiddleware() ,  taskController.GetTasks) 
-		tasks.GET("/:id", taskController.GetTaskByID) 
-		tasks.POST("/" ,  taskController.CreateTask)  
-		tasks.DELETE("/:id" , taskController.DeleteTask)
-		tasks.PUT("/:id", taskController.UpdateTask)  
-		tasks.GET("/mytask" , taskController.GetTasksByUserID)
+	
+
+			taskroute := router.Group("/task")
+      {
+
+		  taskroute.GET("/" ,  taskController.GetTasks) 
+		  taskroute.GET("/:id", taskController.GetTaskByID) 
+		  taskroute.POST("/" ,  taskController.CreateTask)  
+		  taskroute.DELETE("/:id" , taskController.DeleteTask)
+		  taskroute.PUT("/:id", taskController.UpdateTask)  
+		  taskroute.GET("/mytask" , taskController.GetTasksByUserID)
+	  }
 
     }
-}
+

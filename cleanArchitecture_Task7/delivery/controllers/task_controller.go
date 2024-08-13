@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 	"task7/domain"
-	"task7/usecase"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,56 +10,44 @@ import (
 
 
 type taskController struct{
-	taskUsecase *usecase.TaskUseCase
+	taskUsecase domain.TaskUsecase
 }
 
 
-func NewTaskController(taskUsecase *usecase.TaskUseCase) *taskController {
+func NewTaskController(taskUsecase domain.TaskUsecase ) *taskController {
 	return &taskController{taskUsecase: taskUsecase}
 }
 
 func (tc *taskController) CreateTask(c *gin.Context){
-	
 	userid := c.GetString("user_id")
 	var task domain.Task
 	if err := c.ShouldBindJSON(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	task.USERID = userid
-	task, err := tc.taskUsecase.CreateTask(task)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"task": task, "message": "task created successfully"})
+	response := tc.taskUsecase.CreateTask(task)
 	
 
+	HandleResponse(c , response)
 }
 
 func (tc * taskController) GetTasksByUserID(c *gin.Context) {
 	id := c.GetString("user_id")
-	tasks, err := tc.taskUsecase.GetTasksByUserID(id)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error this": err.Error()})
-		return
-	}
+	response := tc.taskUsecase.GetTasksByUserID(id)
+	
+	HandleResponse(c , response)
 
-	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
+	
 }
 
 
 func (tc * taskController) GetTasks(c *gin.Context) {
-	tasks, err := tc.taskUsecase.GetAllTask()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error ": err.Error()})
-		return
-	}
+	response := tc.taskUsecase.GetAllTask()
+	
+	HandleResponse(c , response)
 
-	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
+	
 
 }
 
@@ -70,26 +57,19 @@ func (tc * taskController) DeleteTask(c *gin.Context) {
 	role := c.GetString("role")
 	userid := c.GetString("user_id")
 	
-	err := tc.taskUsecase.DeleteTask(userid , id , role)
+	response := tc.taskUsecase.DeleteTask(userid , id , role)
 
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	HandleResponse(c , response)
 
-	c.JSON(http.StatusOK, gin.H{"message": "task deleted successfully"})
 }
 
 func (tc * taskController) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
 	role := c.GetString("role")
-	task, err := tc.taskUsecase.GetTaskByID(id , role)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	response := tc.taskUsecase.GetTaskByID(id , role)
+	
+	HandleResponse(c , response)
 
-	c.JSON(http.StatusOK, gin.H{"task": task})
 }
 
 
@@ -105,14 +85,10 @@ func (tc *taskController) UpdateTask(c *gin.Context){
 
 	// calling services
 
-	task , err :=tc.taskUsecase.UpdateTask(userid , taskid , tasks)
+	response :=tc.taskUsecase.UpdateTask(userid , taskid , tasks)
 
-	if err != nil{
-		c.IndentedJSON(http.StatusBadRequest , gin.H{"err" : err })
-	}
-	
-	
-	c.IndentedJSON(http.StatusAccepted , gin.H{"message" :  "Task Updates Successfully" , "task" : task})
+	HandleResponse(c , response)
+
 	
 }
 

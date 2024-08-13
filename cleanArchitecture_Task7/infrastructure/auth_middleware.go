@@ -49,10 +49,34 @@ if err != nil || !token.Valid {
 
 
 if claims, ok := token.Claims.(jwt.MapClaims); ok {
-	c.Set("user_id" , claims["user_id"])  
-    c.Set("role" , claims["role"])		
-   
-}
+			// Accessing nested claims correctly
+			if customClaims, ok := claims["claims"].(map[string]interface{}); ok {
+				userID, userIDOk := customClaims["user_id"].(string)
+				role, roleOk := customClaims["role"].(string)
+				email, emailOk := customClaims["email"].(string)
+
+				if userIDOk && roleOk && emailOk {
+					c.Set("user_id", userID)
+					c.Set("role", role)
+					c.Set("email", email)
+
+		
+				} else {
+					c.JSON(401, gin.H{"error": "Invalid JWT claims"})
+					c.Abort()
+					return
+				}
+			} else {
+				c.JSON(401, gin.H{"error": "Invalid JWT claims structure"})
+				c.Abort()
+				return
+			}
+		} else {
+			c.JSON(401, gin.H{"error": "Invalid JWT claims"})
+			c.Abort()
+			return
+		}
+
     c.Next()
   }
 }

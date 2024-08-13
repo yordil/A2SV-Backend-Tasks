@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"task7/domain"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,19 +9,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type taskRepositoryImpl struct {
-	collection *mongo.Collection
+type TaskRepositoryImpl struct {
+	client  *mongo.Client
+	dbname string
+	collection string 
+}
+
+func NewTaskRepositoryImpl(db *mongo.Client , dbname string,  collection string) domain.TaskRepository {
+	return &TaskRepositoryImpl{
+		client: db,
+		dbname: dbname,
+		collection: collection, 
+	}
 }
 
 
 
 
-func NewTaskRepositoryImpl(collection *mongo.Collection) domain.TaskRepository {
-	return &taskRepositoryImpl{collection: collection}
-}
-
-func (tr *taskRepositoryImpl) CreateTask(task domain.Task) (domain.Task, error) {
-	_, err := tr.collection.InsertOne(context.Background(), task)
+// NewUserRepositoryImpl initializes the repository with a MongoDB collection
+func (tr *TaskRepositoryImpl) CreateTask(task domain.Task) (domain.Task, error) {
+	
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
+	_, err := collection.InsertOne(context.Background(), task)
 	if err != nil {
 		return domain.Task{}, err 
 	}
@@ -30,9 +38,10 @@ func (tr *taskRepositoryImpl) CreateTask(task domain.Task) (domain.Task, error) 
 	return task, nil
 }
 
-func (tr * taskRepositoryImpl) GetAllTask() ([]domain.Task, error) {
+func (tr * TaskRepositoryImpl) GetAllTask() ([]domain.Task, error) {
 	var tasks []domain.Task
-	cursor, err := tr.collection.Find(context.Background(), bson.M{})
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
+	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +57,12 @@ func (tr * taskRepositoryImpl) GetAllTask() ([]domain.Task, error) {
 }
 
 
-func (tr *taskRepositoryImpl) GetTaskByUserID(id string) ([]domain.Task, error) {
+func (tr *TaskRepositoryImpl) GetTaskByUserID(id string) ([]domain.Task, error) {
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
 	var tasks []domain.Task
 	
 	
-	cursor, err := tr.collection.Find(context.Background(), bson.M{"userid": id})
+	cursor, err := collection.Find(context.Background(), bson.M{"userid": id})
 	if err != nil {
 		return nil, err
 	}
@@ -69,25 +79,27 @@ func (tr *taskRepositoryImpl) GetTaskByUserID(id string) ([]domain.Task, error) 
 	
 }
 
-func (tr *taskRepositoryImpl) DeleteTask(id string) (error) {
+func (tr *TaskRepositoryImpl) DeleteTask(id string) (error) {
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
-	tr.collection.DeleteOne(context.Background(), bson.M{"_id": idPrimitive})
+	collection.DeleteOne(context.Background(), bson.M{"_id": idPrimitive})
 
 	return nil
 
 }
 
 
-func (tr *taskRepositoryImpl) GetTaskByID(id string, role string) (domain.Task, error) {
+func (tr *TaskRepositoryImpl) GetTaskByID(id string, role string) (domain.Task, error) {
 	var task domain.Task
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.Task{}, err
 	}
-	err = tr.collection.FindOne(context.Background(), bson.M{"_id": idPrimitive}).Decode(&task)
+	err = collection.FindOne(context.Background(), bson.M{"_id": idPrimitive}).Decode(&task)
 	if err != nil {
 		return domain.Task{}, err
 	}
@@ -95,7 +107,8 @@ func (tr *taskRepositoryImpl) GetTaskByID(id string, role string) (domain.Task, 
 	return task, nil
 }
 
-func (tr *taskRepositoryImpl) UpdateTask(id string, task domain.Task) (domain.Task, error) {
+func (tr *TaskRepositoryImpl) UpdateTask(id string, task domain.Task) (domain.Task, error) {
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.Task{}, err
@@ -110,7 +123,7 @@ func (tr *taskRepositoryImpl) UpdateTask(id string, task domain.Task) (domain.Ta
         },
     }
 	var updatedTask domain.Task
-	err = tr.collection.FindOneAndUpdate(context.Background(), bson.M{"_id": idPrimitive}, update).Decode(&updatedTask)
+	err = collection.FindOneAndUpdate(context.Background(), bson.M{"_id": idPrimitive}, update).Decode(&updatedTask)
 	
 	if err != nil {
 		return domain.Task{}, err
@@ -121,8 +134,8 @@ func (tr *taskRepositoryImpl) UpdateTask(id string, task domain.Task) (domain.Ta
 
 
 
-func(tr * taskRepositoryImpl) UserIdGetter(userid string , taskid string) bool {
-
+func(tr * TaskRepositoryImpl) UserIdGetter(userid string , taskid string) bool {
+	collection := tr.client.Database(tr.dbname).Collection(tr.collection)
     // get userid from the task collection
     var task domain.Task
 
@@ -131,11 +144,11 @@ func(tr * taskRepositoryImpl) UserIdGetter(userid string , taskid string) bool {
         return false
     }
     // context
-    err = tr.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&task)
+    err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&task)
     if err != nil {
         return false
     }
-	fmt.Println(task.USERID , userid ," ************")
+	
     return task.USERID == userid 
 
 }

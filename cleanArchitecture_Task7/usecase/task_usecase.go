@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"task7/domain"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,69 +10,83 @@ type TaskUseCase struct {
 	taskRepo domain.TaskRepository
 }
 
-func NewTaskUseCase(taskRepo domain.TaskRepository) *TaskUseCase {
+func NewTaskUseCase(taskRepo domain.TaskRepository) domain.TaskUsecase {
 	return &TaskUseCase{taskRepo: taskRepo}
 }
 
-func (tu *TaskUseCase) CreateTask(task domain.Task) (domain.Task, error) {
+func (tu *TaskUseCase) CreateTask(task domain.Task) interface{} {
 	if task.Description == "" || task.DueDate == "" || task.Status == "" || task.Title == "" || task.USERID == "" {
-		return domain.Task{}, errors.New("missing required fields")
+		return &domain.ErrorResponse{Message: "missing required fields",  Status: 400}
 	}
 
 	id := primitive.NewObjectID()
 	task.ID = id
 	task, err := tu.taskRepo.CreateTask(task)
+	if err != nil { 
+		return &domain.ErrorResponse{Message: "cannot create task", Status: 500}
+	}
 
-	return task, err
-
+	return &domain.TaskSuccessResponse{Message: "task created successfully", Status: 200, Data: task}
 }
 
-func (tu *TaskUseCase) GetTasksByUserID(id string) ([]domain.Task, error) {
+
+func (tu *TaskUseCase) GetTasksByUserID(id string) (interface{}) {
 	
 	tasks, err := tu.taskRepo.GetTaskByUserID(id)
 
-	return tasks, err
+	if err != nil { 
+		return &domain.ErrorResponse{Message: "cannot get tasks", Status: 500}
+	}
+
+	return &domain.TaskResponse{All_Task: tasks}
 }
 
-func (tu *TaskUseCase) GetAllTask() ([]domain.Task, error) {
+func (tu *TaskUseCase) GetAllTask() (interface{}) {
 	tasks, err := tu.taskRepo.GetAllTask()
-	return tasks, err
+
+	if err != nil {
+		return &domain.ErrorResponse{Message: "cannot get tasks", Status: 500}
+	}
+
+	return &domain.TaskResponse{All_Task: tasks}
 }
 
 
-func (tu *TaskUseCase) DeleteTask(userID string , taskID string , role string) error {
+func (tu *TaskUseCase) DeleteTask(userID string , taskID string , role string) (interface{}) {
 	
 	
-	if role == "admin" || tu.taskRepo.UserIdGetter(userID , taskID){
+	if role == "admin" || tu.taskRepo.UserIdGetter(userID , taskID) || role == "superAdmin" {
 		err := tu.taskRepo.DeleteTask(taskID)
 		
-		return err
+		if err != nil {
+			return &domain.ErrorResponse{Message: "cannot delete task", Status: 500}
+		}
+
+		return &domain.TaskSuccessResponse{Message: "task deleted successfully", Status: 200}
 		
 	}
 
-	return errors.New("not authorized to delete this task")
+	return &domain.ErrorResponse{Message: "you are not authorized to delete this task", Status: 401}
 }	
 
 
-func (tu *TaskUseCase) GetTaskByID(id string , role string) (domain.Task, error) {
+func (tu *TaskUseCase) GetTaskByID(id string , role string) (interface{}) {
 	task, err := tu.taskRepo.GetTaskByID(id , role)
 
 	if err != nil {
-		return domain.Task{}, err
+		return &domain.ErrorResponse{Message: "cannot get task", Status: 500}
 	}
 
-	if role != "admin" && task.USERID != id {
-		return domain.Task{}, errors.New("you are not authorized to view this task")
-	
-		
+	if role == "admin" || task.USERID == id || role == "superAdmin" {
+		return &domain.SingleTaskResponse{Single_Task: task}
 	}
-	return task, nil
+	return &domain.ErrorResponse{Message: "you are not authorized to view this task", Status: 401}
 
 }
 
-func (tu *TaskUseCase) UpdateTask(userID string , taskid string , task domain.Task) (domain.Task, error) {
+func (tu *TaskUseCase) UpdateTask(userID string , taskid string , task domain.Task) (interface{}) {	
 	if task.Description == "" || task.DueDate == "" || task.Status == "" || task.Title == ""  {
-		return domain.Task{}, errors.New("missing required fields")
+		return &domain.ErrorResponse{Message: "missing required fields",  Status: 400}
 	}
 
 	userIDCheker := tu.taskRepo.UserIdGetter(userID , taskid)
@@ -82,10 +95,10 @@ func (tu *TaskUseCase) UpdateTask(userID string , taskid string , task domain.Ta
 		updatedTask , err := tu.taskRepo.UpdateTask(taskid , task)
 		
 		if err != nil {
-			return domain.Task{} , errors.New("cannot Update the task")
+			return &domain.ErrorResponse{Message: "cannot update task", Status: 500}
 		}
-		return updatedTask , nil
+		return &domain.TaskSuccessResponse{Message: "task updated successfully", Status: 200, Data: updatedTask}
 	}
 
-	return domain.Task{} , errors.New("you are not authorized to edit this Page")
+	return &domain.ErrorResponse{Message: "you are not authorized to update this task", Status: 401}
 }

@@ -2,26 +2,28 @@
 package routers
 
 import (
-	"log"
 	"task7/bootstrap"
+	"task7/infrastructure"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter() *gin.Engine {
-    router := gin.Default()
-    // db connection
-    err :=  godotenv.Load(".env")
-    if err != nil { 
-        log.Fatal("Error loading .env file")
-    }
-    bootstrap.ConnectDB()
-    
-    SetupUserRoutes(router)
-    SetupTaskRoutes(router)
+func SetupRouter(env *bootstrap.Env , timeout time.Duration , db *mongo.Client , gin *gin.Engine)  {
+    publicRouter := gin.Group("")
 
+	NewSignUPRouter(env , timeout , db , publicRouter)
+	NewLoginRouter(env , timeout , db , publicRouter)
 
-    return router
+	privateRouter := gin.Group("")	
+	privateRouter.Use(infrastructure.AuthMiddleware())
+
+	// NewTaskRouter(env , timeout , db , privateRouter)
+	NewUserRouter(env , timeout , db , privateRouter)
+	NewTaskRouter(env , timeout , db , privateRouter)
+
+	
+	
 }
 

@@ -21,12 +21,12 @@ type TaskRepository interface {
 	UserIdGetter(id string , taskid string) bool
 }
 
-// type TaskUsecase interface {
-// 	CreateTask(task Task) (Task, error)
-// 	GetTaskByID(id int) (Task, error)
-// 	GetAllTask() ([]Task, error)
-// 	DeleteTask(id int) error
-// 	UpdateTask(task Task) (Task, error)
-// 	GetTaskByUserID(userID int) ([]Task, error)
+type TaskUsecase interface {
+	CreateTask(task Task) (interface{})
+	GetTaskByID(id string , role string) (interface{})
+	GetAllTask() (interface{})
+	DeleteTask(userID string , taskID string , role string) interface{}
+	UpdateTask(userID string , taskid string , task Task) (interface{})
+	GetTasksByUserID(id string) (interface{})
 
-// }
+}

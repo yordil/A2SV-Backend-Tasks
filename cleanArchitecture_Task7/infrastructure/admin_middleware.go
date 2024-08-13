@@ -10,11 +10,13 @@ func AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role := c.GetString("role")
 		fmt.Println(role , "this is admin middleware")
-		if role != "admin" {
-			c.JSON(403, gin.H{"error": "You are not authorized to view this page"})
-			c.Abort()
+		if role == "admin" || role == "superAdmin" {
+			c.Next()
+			
 			return
 		}
-		c.Next()
+		c.JSON(403, gin.H{"error": "You are not authorized to view this page"})
+		c.Abort()
+		
 	}
 }
